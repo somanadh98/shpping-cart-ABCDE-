@@ -86,17 +86,47 @@ The backend will start on `http://localhost:8082`
    cd frontend
    ```
 
-2. Install dependencies:
+2. Create a `.env` file (copy from `.env.example`):
+   ```
+   REACT_APP_API_URL=http://localhost:8082
+   ```
+   For local development, set this to your backend URL.
+
+3. Install dependencies:
    ```
    npm install
    ```
 
-3. Start the development server:
+4. Start the development server:
    ```
    npm start
    ```
 
 The frontend will start on `http://localhost:3000`
+
+## Production Deployment
+
+### Vercel (Frontend)
+
+1. Set the environment variable in Vercel dashboard:
+   - `REACT_APP_API_URL` = Your Render backend URL (e.g., `https://your-app.onrender.com`)
+
+2. Deploy your frontend to Vercel.
+
+### Render (Backend)
+
+1. Set environment variables in Render dashboard:
+   - `DB_HOST` = Your PostgreSQL host
+   - `DB_PORT` = 5432 (or your port)
+   - `DB_USER` = Your PostgreSQL user
+   - `DB_PASSWORD` = Your PostgreSQL password
+   - `DB_NAME` = Your database name
+
+2. Deploy your backend to Render.
+
+3. The backend CORS is configured to allow:
+   - `http://localhost:3000` (local development)
+   - `https://*.vercel.app` (Vercel deployments)
 
 ## API Flow
 
