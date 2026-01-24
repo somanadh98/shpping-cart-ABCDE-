@@ -28,9 +28,8 @@ func InitDB() {
 		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
 	}
 
-	// Test connection by executing a simple query
-	var result int
-	if err := db.Raw("SELECT 1").Scan(&result).Error; err != nil {
+	// Test connection using ping
+	if err := db.DB().Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 

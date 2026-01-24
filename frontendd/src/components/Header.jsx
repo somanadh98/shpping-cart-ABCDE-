@@ -6,7 +6,8 @@ function Header({ onLogout }) {
     if (onLogout) {
       onLogout();
     }
-    window.location.reload();
+    // Clear cart state by dispatching event
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
   const handleCart = async () => {
@@ -37,7 +38,8 @@ function Header({ onLogout }) {
     try {
       await checkout();
       window.alert('Order successful');
-      window.location.reload();
+      // Trigger cart refresh by dispatching custom event
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
     } catch (error) {
       if (error.message === 'Session expired') {
         window.alert('Session expired. Please login again.');

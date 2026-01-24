@@ -18,11 +18,45 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
+	// Check if cart has items
+	var cartItemsCount int64
+	config.DB.Model(&models.CartItem{}).Where("cart_id = ?", cart.ID).Count(&cartItemsCount)
+	if cartItemsCount == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cart is empty"})
+		return
+	}
+
+	// Use transaction to ensure atomicity
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Create order
 	order := models.Order{
 		CartID: cart.ID,
 		UserID: currentUser.ID,
 	}
-	config.DB.Create(&order)
+	if err := tx.Create(&order).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
+		return
+	}
+
+	// Clear all cart items for this cart
+	if err := tx.Where("cart_id = ?", cart.ID).Delete(&models.CartItem{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear cart"})
+		return
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete order"})
+		return
+	}
 
 	c.JSON(http.StatusCreated, order)
 }

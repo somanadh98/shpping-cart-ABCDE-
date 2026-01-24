@@ -24,6 +24,18 @@ async function handleResponse(response) {
   return data;
 }
 
+export const register = async (username, password) => {
+  const response = await fetch(`${API_URL}/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  return handleResponse(response);
+};
+
 export const login = async (username, password) => {
   const response = await fetch(`${API_URL}/users/login`, {
     method: 'POST',

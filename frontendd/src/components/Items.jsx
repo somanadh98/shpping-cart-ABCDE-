@@ -13,6 +13,16 @@ function Items() {
     }
     loadItems();
     loadCart();
+    
+    // Listen for cart update events (e.g., after checkout)
+    const handleCartUpdate = () => {
+      loadCart();
+    };
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
   }, []);
 
   const loadItems = async () => {
