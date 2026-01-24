@@ -28,9 +28,16 @@ func CreateOrder(c *gin.Context) {
 
 	// Use transaction to ensure atomicity
 	tx := config.DB.Begin()
+	if tx.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to start transaction"})
+		return
+	}
+
+	// Ensure rollback on any error
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
+			panic(r)
 		}
 	}()
 
@@ -45,15 +52,16 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
-	// Clear all cart items for this cart
+	// Delete all cart items for this cart (do NOT delete the cart itself)
 	if err := tx.Where("cart_id = ?", cart.ID).Delete(&models.CartItem{}).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear cart"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear cart items"})
 		return
 	}
 
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete order"})
 		return
 	}
