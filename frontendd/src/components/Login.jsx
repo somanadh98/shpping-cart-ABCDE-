@@ -51,7 +51,13 @@ function Login({ onLogin }) {
       if (isRegisterMode) {
         setErrorMessage(error.message || 'Registration failed. Username may already exist.');
       } else {
-        setErrorMessage('Invalid username/password');
+        // Handle 409 conflict (already logged in on another device)
+        if (error.status === 409 || error.message.includes('already logged in')) {
+          window.alert('This account is already logged in on another device');
+          setErrorMessage('');
+        } else {
+          setErrorMessage('Invalid username/password');
+        }
       }
     } finally {
       setIsLoading(false);

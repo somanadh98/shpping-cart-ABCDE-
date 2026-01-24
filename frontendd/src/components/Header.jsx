@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getCart, checkout, getOrders } from '../api/api';
+import { getCart, checkout, getOrders, logout } from '../api/api';
 
 function Header({ onLogout }) {
   const [successMessage, setSuccessMessage] = useState('');
@@ -21,7 +21,8 @@ function Header({ onLogout }) {
     }
   }, [errorMessage]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout();
     localStorage.removeItem('token');
     if (onLogout) {
       onLogout();

@@ -46,6 +46,7 @@ func InitDB() {
 		&models.Cart{},
 		&models.CartItem{},
 		&models.Order{},
+		&models.OrderItem{},
 	)
 	log.Println("Database migrations completed")
 }

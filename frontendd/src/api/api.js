@@ -47,6 +47,12 @@ export const login = async (username, password) => {
 
   const data = await response.json();
 
+  if (response.status === 409) {
+    const error = new Error(data.error || 'This account is already logged in on another device');
+    error.status = 409;
+    throw error;
+  }
+
   if (!response.ok) {
     throw new Error(data.error || 'Login failed');
   }
@@ -143,5 +149,22 @@ export const getOrders = async () => {
     },
   });
   return handleResponse(response);
+};
+
+export const logout = async () => {
+  const token = getToken();
+  if (!token) {
+    return;
+  }
+  try {
+    await fetch(`${API_URL}/users/logout`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    // Ignore logout errors
+  }
 };
 

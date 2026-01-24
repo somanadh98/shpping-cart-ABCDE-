@@ -74,9 +74,34 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Check if user is already logged in on another device
+	if user.CurrentToken != "" {
+		c.JSON(http.StatusConflict, gin.H{"error": "This account is already logged in on another device"})
+		return
+	}
+
 	token := utils.GenerateToken()
 	user.Token = token
-	config.DB.Save(&user)
+	user.CurrentToken = token
+	if err := config.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save token"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func Logout(c *gin.Context) {
+	user, _ := c.Get("user")
+	currentUser := user.(models.User)
+
+	// Clear current_token
+	currentUser.CurrentToken = ""
+	currentUser.Token = ""
+	if err := config.DB.Save(&currentUser).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

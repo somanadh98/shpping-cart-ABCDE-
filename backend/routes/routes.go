@@ -15,6 +15,7 @@ func SetupRoutes(r *gin.Engine) {
 	auth.Use(middleware.AuthMiddleware())
 
 	auth.GET("/users", handlers.ListUsers)
+	auth.POST("/users/logout", handlers.Logout)
 	auth.POST("/items", handlers.CreateItem)
 	auth.GET("/items", handlers.ListItems)
 	auth.POST("/carts", handlers.CreateCart)

@@ -30,7 +30,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		var user models.User
-		if err := config.DB.Where("token = ?", token).First(&user).Error; err != nil {
+		if err := config.DB.Where("current_token = ?", token).First(&user).Error; err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		// Ensure token matches current_token
+		if user.CurrentToken != token {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
