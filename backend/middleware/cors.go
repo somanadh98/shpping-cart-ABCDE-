@@ -12,14 +12,17 @@ func CORSMiddleware() gin.HandlerFunc {
 		origin := c.Request.Header.Get("Origin")
 
 		allowedOrigins := []string{
-			"http://localhost:3000",
+			"http://localhost:5173", // Vite default port
+			"http://localhost:3000", // Optional: Create React App port
 		}
 
 		allowed := false
 		if origin != "" {
+			// Allow Vercel deployments
 			if strings.HasPrefix(origin, "https://") && strings.Contains(origin, ".vercel.app") {
 				allowed = true
 			}
+			// Check against allowed localhost origins
 			for _, allowedOrigin := range allowedOrigins {
 				if origin == allowedOrigin {
 					allowed = true

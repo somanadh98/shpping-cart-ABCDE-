@@ -4,7 +4,6 @@ import (
 	"backend/config"
 	"backend/models"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -53,60 +52,47 @@ func CreateCart(c *gin.Context) {
 }
 
 func ListCarts(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token != "" {
-		token = strings.TrimPrefix(token, "Bearer ")
-		if token == "" {
-			token = strings.TrimPrefix(c.GetHeader("Authorization"), "Token ")
-		}
+	// User is already authenticated via AuthMiddleware
+	user, _ := c.Get("user")
+	currentUser := user.(models.User)
 
-		var user models.User
-		if err := config.DB.Where("token = ?", token).First(&user).Error; err == nil {
-
-			var cart models.Cart
-			if err := config.DB.Where("user_id = ?", user.ID).First(&cart).Error; err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"cart_id": 0,
-					"items":   []interface{}{},
-					"total":   0,
-				})
-				return
-			}
-
-			var cartItems []models.CartItem
-			config.DB.Where("cart_id = ?", cart.ID).Find(&cartItems)
-
-			var items []gin.H
-			var total float64 = 0
-
-			for _, cartItem := range cartItems {
-				var item models.Item
-				config.DB.Where("id = ?", cartItem.ItemID).First(&item)
-
-				subtotal := item.Price * float64(cartItem.Quantity)
-				total += subtotal
-
-				items = append(items, gin.H{
-					"id":       item.ID,
-					"name":     item.Name,
-					"price":    item.Price,
-					"quantity": cartItem.Quantity,
-					"subtotal": subtotal,
-				})
-			}
-
-			c.JSON(http.StatusOK, gin.H{
-				"cart_id": cart.ID,
-				"items":   items,
-				"total":   total,
-			})
-			return
-		}
+	var cart models.Cart
+	if err := config.DB.Where("user_id = ?", currentUser.ID).First(&cart).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"cart_id": 0,
+			"items":   []interface{}{},
+			"total":   0,
+		})
+		return
 	}
 
-	var carts []models.Cart
-	config.DB.Find(&carts)
-	c.JSON(http.StatusOK, carts)
+	var cartItems []models.CartItem
+	config.DB.Where("cart_id = ?", cart.ID).Find(&cartItems)
+
+	var items []gin.H
+	var total float64 = 0
+
+	for _, cartItem := range cartItems {
+		var item models.Item
+		config.DB.Where("id = ?", cartItem.ItemID).First(&item)
+
+		subtotal := item.Price * float64(cartItem.Quantity)
+		total += subtotal
+
+		items = append(items, gin.H{
+			"id":       item.ID,
+			"name":     item.Name,
+			"price":    item.Price,
+			"quantity": cartItem.Quantity,
+			"subtotal": subtotal,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"cart_id": cart.ID,
+		"items":   items,
+		"total":   total,
+	})
 }
 
 func RemoveCartItem(c *gin.Context) {
