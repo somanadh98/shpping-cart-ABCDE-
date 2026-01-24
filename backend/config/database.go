@@ -18,16 +18,29 @@ func InitDB() {
 		log.Fatal("DATABASE_URL environment variable is not set")
 	}
 
+	// Validate DATABASE_URL format (basic check)
+	if len(databaseURL) < 10 {
+		log.Fatal("DATABASE_URL appears to be invalid (too short)")
+	}
+
 	db, err := gorm.Open("postgres", databaseURL)
 	if err != nil {
-		log.Fatalf("failed to connect to PostgreSQL database: %v", err)
+		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
+	}
+
+	// Test connection by executing a simple query
+	var result int
+	if err := db.Raw("SELECT 1").Scan(&result).Error; err != nil {
+		log.Fatalf("Failed to ping database: %v", err)
 	}
 
 	db.LogMode(true)
 	DB = db
 
-	log.Println("Connected to PostgreSQL successfully")
+	log.Println("Database connected successfully")
 
+	// AutoMigrate all models (safe - no DROP TABLE)
+	log.Println("Running database migrations...")
 	DB.AutoMigrate(
 		&models.User{},
 		&models.Item{},
@@ -35,4 +48,5 @@ func InitDB() {
 		&models.CartItem{},
 		&models.Order{},
 	)
+	log.Println("Database migrations completed")
 }

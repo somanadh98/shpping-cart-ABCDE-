@@ -14,9 +14,12 @@ import (
 func main() {
 	// Load .env file for local development
 	// On Render, environment variables are set directly, so this will silently fail
-	_ = godotenv.Load()
+	if err := godotenv.Load(); err == nil {
+		log.Println("Loaded .env file")
+	}
 
 	// Initialize database (must be after env loading)
+	log.Println("Connecting to database...")
 	config.InitDB()
 
 	// Setup router
