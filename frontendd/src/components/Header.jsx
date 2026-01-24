@@ -1,6 +1,26 @@
+import { useState, useEffect } from 'react';
 import { getCart, checkout, getOrders } from '../api/api';
 
 function Header({ onLogout }) {
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [cartDetails, setCartDetails] = useState(null);
+  const [orderHistory, setOrderHistory] = useState(null);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     if (onLogout) {
@@ -11,97 +31,118 @@ function Header({ onLogout }) {
   };
 
   const handleCart = async () => {
+    setCartDetails(null);
+    setErrorMessage('');
     try {
       const cart = await getCart();
       if (cart.cart_id && cart.items && cart.items.length > 0) {
-        let message = `Cart ID: ${cart.cart_id}\n\nItems:\n`;
-        cart.items.forEach((item) => {
-          message += `${item.name} × ${item.quantity}\n`;
-          message += `Price: ₹${item.price}\n`;
-          message += `Subtotal: ₹${item.subtotal}\n\n`;
-        });
-        message += `Total: ₹${cart.total}`;
-        window.alert(message);
+        setCartDetails(cart);
       } else {
-        window.alert('Cart is empty');
+        setErrorMessage('Cart is empty');
       }
     } catch (error) {
       if (error.message === 'Session expired') {
-        window.alert('Session expired. Please login again.');
+        setErrorMessage('Session expired. Please login again.');
       } else {
-        window.alert('Failed to load cart');
+        setErrorMessage('Failed to load cart');
       }
     }
   };
 
   const handleCheckout = async () => {
+    setSuccessMessage('');
+    setErrorMessage('');
+    setCartDetails(null);
     try {
       await checkout();
-      window.alert('Order successful');
+      setSuccessMessage('Order successful');
       // Trigger cart refresh by dispatching custom event
       window.dispatchEvent(new CustomEvent('cartUpdated'));
     } catch (error) {
       if (error.message === 'Session expired') {
-        window.alert('Session expired. Please login again.');
+        setErrorMessage('Session expired. Please login again.');
       } else {
-        window.alert('Checkout failed');
+        setErrorMessage('Checkout failed');
       }
     }
   };
 
   const handleOrderHistory = async () => {
+    setOrderHistory(null);
+    setErrorMessage('');
     try {
       const orders = await getOrders();
       if (!orders || orders.length === 0) {
-        window.alert('No orders found');
+        setErrorMessage('No orders found');
         return;
       }
-      
-      // Show last 5 orders
-      const last5Orders = orders.slice(0, 5);
-      
-      let message = 'Order History (Last 5 Orders):\n\n';
-      message += '='.repeat(50) + '\n\n';
-      
-      last5Orders.forEach((order, index) => {
-        const date = new Date(order.created_at).toLocaleDateString();
-        const orderId = order.order_id || order.id;
-        message += `Order #${orderId} - ${date}\n`;
-        message += '-'.repeat(50) + '\n';
-        
-        if (order.items && order.items.length > 0) {
-          order.items.forEach((item) => {
-            message += `  ${item.name}\n`;
-            message += `    Quantity: ${item.quantity}\n`;
-            message += `    Price: ₹${item.price}\n`;
-            message += `    Subtotal: ₹${item.subtotal}\n\n`;
-          });
-          message += `  Order Total: ₹${order.total}\n`;
-        } else {
-          message += '  No items\n';
-        }
-        
-        if (index < last5Orders.length - 1) {
-          message += '\n' + '='.repeat(50) + '\n\n';
-        }
-      });
-      
-      window.alert(message);
+      setOrderHistory(orders.slice(0, 5));
     } catch (error) {
       if (error.message === 'Session expired') {
-        window.alert('Session expired. Please login again.');
+        setErrorMessage('Session expired. Please login again.');
       } else {
-        window.alert('Failed to load orders');
+        setErrorMessage('Failed to load orders');
       }
     }
   };
 
   return (
     <div>
-      <button onClick={handleCheckout}>Checkout</button>
-      <button onClick={handleCart}>Cart</button>
-      <button onClick={handleOrderHistory}>Order History</button>
-      <button onClick={handleLogout}>Logout</button>
+      {successMessage && (
+        <div style={{ padding: '10px', marginBottom: '10px', backgroundColor: '#d4edda', color: '#155724', border: '1px solid #c3e6cb', borderRadius: '4px' }}>
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div style={{ padding: '10px', marginBottom: '10px', backgroundColor: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb', borderRadius: '4px' }}>
+          {errorMessage}
+        </div>
+      )}
+      <div style={{ marginBottom: '10px' }}>
+        <button onClick={handleCheckout}>Checkout</button>
+        <button onClick={handleCart}>Cart</button>
+        <button onClick={handleOrderHistory}>Order History</button>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
+      {cartDetails && (
+        <div style={{ padding: '15px', marginTop: '10px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+          <h3>Cart Details (ID: {cartDetails.cart_id})</h3>
+          {cartDetails.items.map((item, idx) => (
+            <div key={idx} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: idx < cartDetails.items.length - 1 ? '1px solid #dee2e6' : 'none' }}>
+              <div><strong>{item.name}</strong> × {item.quantity}</div>
+              <div>Price: ₹{item.price} | Subtotal: ₹{item.subtotal}</div>
+            </div>
+          ))}
+          <div style={{ marginTop: '10px', fontWeight: 'bold' }}>Total: ₹{cartDetails.total}</div>
+        </div>
+      )}
+      {orderHistory && (
+        <div style={{ padding: '15px', marginTop: '10px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+          <h3>Order History (Last 5 Orders)</h3>
+          {orderHistory.map((order, idx) => {
+            const date = new Date(order.created_at).toLocaleDateString();
+            const orderId = order.order_id || order.id;
+            return (
+              <div key={idx} style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: idx < orderHistory.length - 1 ? '1px solid #dee2e6' : 'none' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Order #{orderId} - {date}</div>
+                {order.items && order.items.length > 0 ? (
+                  <>
+                    {order.items.map((item, itemIdx) => (
+                      <div key={itemIdx} style={{ marginLeft: '20px', marginBottom: '5px' }}>
+                        <div>{item.name} - Quantity: {item.quantity}</div>
+                        <div style={{ fontSize: '0.9em', color: '#666' }}>Price: ₹{item.price} | Subtotal: ₹{item.subtotal}</div>
+                      </div>
+                    ))}
+                    <div style={{ marginTop: '5px', fontWeight: 'bold' }}>Order Total: ₹{order.total}</div>
+                  </>
+                ) : (
+                  <div style={{ marginLeft: '20px', color: '#666' }}>No items</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { login, register } from '../api/api';
 
 function Login({ onLogin }) {
@@ -6,16 +6,34 @@ function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setSuccessMessage('');
+    setErrorMessage('');
     
     try {
       if (isRegisterMode) {
         // Register flow
         await register(username, password);
-        window.alert('Registration successful! Please login.');
+        setSuccessMessage('Registration successful! Please login.');
         setIsRegisterMode(false);
         setUsername('');
         setPassword('');
@@ -26,14 +44,14 @@ function Login({ onLogin }) {
           localStorage.setItem('token', result.token);
           onLogin(result.token);
         } else {
-          window.alert('Invalid username/password');
+          setErrorMessage('Invalid username/password');
         }
       }
     } catch (error) {
       if (isRegisterMode) {
-        window.alert(error.message || 'Registration failed. Username may already exist.');
+        setErrorMessage(error.message || 'Registration failed. Username may already exist.');
       } else {
-        window.alert('Invalid username/password');
+        setErrorMessage('Invalid username/password');
       }
     } finally {
       setIsLoading(false);
@@ -43,6 +61,16 @@ function Login({ onLogin }) {
   return (
     <div>
       <h2>{isRegisterMode ? 'Register' : 'Login'}</h2>
+      {successMessage && (
+        <div style={{ padding: '10px', marginBottom: '10px', backgroundColor: '#d4edda', color: '#155724', border: '1px solid #c3e6cb', borderRadius: '4px' }}>
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div style={{ padding: '10px', marginBottom: '10px', backgroundColor: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb', borderRadius: '4px' }}>
+          {errorMessage}
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div>
           <label>Username:</label>
