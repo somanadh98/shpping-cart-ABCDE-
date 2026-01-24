@@ -105,35 +105,35 @@ function Header({ onLogout }) {
         <button onClick={handleLogout}>Logout</button>
       </div>
       {cartDetails && (
-        <div style={{ padding: '15px', marginTop: '10px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-          <h3>Cart Details (ID: {cartDetails.cart_id})</h3>
+        <div style={{ padding: '15px', marginTop: '10px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px', color: '#000' }}>
+          <h3 style={{ color: '#000' }}>Cart Details (ID: {cartDetails.cart_id})</h3>
           {cartDetails.items.map((item, idx) => (
-            <div key={idx} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: idx < cartDetails.items.length - 1 ? '1px solid #dee2e6' : 'none' }}>
+            <div key={idx} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: idx < cartDetails.items.length - 1 ? '1px solid #dee2e6' : 'none', color: '#000' }}>
               <div><strong>{item.name}</strong> × {item.quantity}</div>
               <div>Price: ₹{item.price} | Subtotal: ₹{item.subtotal}</div>
             </div>
           ))}
-          <div style={{ marginTop: '10px', fontWeight: 'bold' }}>Total: ₹{cartDetails.total}</div>
+          <div style={{ marginTop: '10px', fontWeight: 'bold', color: '#000' }}>Total: ₹{cartDetails.total}</div>
         </div>
       )}
       {orderHistory && (
-        <div style={{ padding: '15px', marginTop: '10px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-          <h3>Order History (Last 5 Orders)</h3>
+        <div style={{ padding: '15px', marginTop: '10px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px', color: '#000' }}>
+          <h3 style={{ color: '#000' }}>Order History (Last 5 Orders)</h3>
           {orderHistory.map((order, idx) => {
             const date = new Date(order.created_at).toLocaleDateString();
             const orderId = order.order_id || order.id;
             return (
-              <div key={idx} style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: idx < orderHistory.length - 1 ? '1px solid #dee2e6' : 'none' }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Order #{orderId} - {date}</div>
+              <div key={idx} style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: idx < orderHistory.length - 1 ? '1px solid #dee2e6' : 'none', color: '#000' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#000' }}>Order #{orderId} - {date}</div>
                 {order.items && order.items.length > 0 ? (
                   <>
                     {order.items.map((item, itemIdx) => (
-                      <div key={itemIdx} style={{ marginLeft: '20px', marginBottom: '5px' }}>
+                      <div key={itemIdx} style={{ marginLeft: '20px', marginBottom: '5px', color: '#000' }}>
                         <div>{item.name} - Quantity: {item.quantity}</div>
                         <div style={{ fontSize: '0.9em', color: '#666' }}>Price: ₹{item.price} | Subtotal: ₹{item.subtotal}</div>
                       </div>
                     ))}
-                    <div style={{ marginTop: '5px', fontWeight: 'bold' }}>Order Total: ₹{order.total}</div>
+                    <div style={{ marginTop: '5px', fontWeight: 'bold', color: '#000' }}>Order Total: ₹{order.total}</div>
                   </>
                 ) : (
                   <div style={{ marginLeft: '20px', color: '#666' }}>No items</div>

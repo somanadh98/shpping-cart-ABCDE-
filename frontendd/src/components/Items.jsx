@@ -25,6 +25,8 @@ function Items() {
     };
   }, []);
 
+
+
   const loadItems = async () => {
     try {
       const data = await getItems();
@@ -71,7 +73,7 @@ function Items() {
     <div>
       <h2>Items</h2>
       {cart && cart.total !== undefined && (
-        <div>
+        <div style={{ color: 'black' }} className='cart-total'>
           <h3>Cart Total: ₹{cart.total}</h3>
         </div>
       )}
